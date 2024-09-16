@@ -94,42 +94,44 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		// TODO: prevent deadlock and update accounts' balance
 		// get account
 		if arg.FromAccount < arg.ToAccount {
-			result.FromAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
-				ID:     arg.FromAccount,
-				Amount: -arg.Amount,
-			})
-			if err != nil {
-				return err
-			}
-
-			result.ToAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
-				ID:     arg.ToAccount,
-				Amount: arg.Amount,
-			})
-			if err != nil {
-				return err
-			}
+			result.FromAccount, result.ToAccount, err = addMoney(ctx, q, arg.FromAccount, -arg.Amount, arg.ToAccount, arg.Amount)
 		} else {
-			result.ToAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
-				ID:     arg.ToAccount,
-				Amount: arg.Amount,
-			})
-			if err != nil {
-				return err
-			}
+			result.ToAccount, result.FromAccount, err = addMoney(ctx, q, arg.ToAccount, arg.Amount, arg.FromAccount, -arg.Amount)
+		}
 
-			result.FromAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
-				ID:     arg.FromAccount,
-				Amount: -arg.Amount,
-			})
-			if err != nil {
-				return err
-			}
-
+		if err != nil {
+			return err
 		}
 
 		return nil
 	})
 
 	return result, err
+}
+
+func addMoney(
+	ctx context.Context,
+	q *Queries,
+	accountId1 int64,
+	amount1 int64,
+	accountId2 int64,
+	amount2 int64,
+) (account1 Account, account2 Account, err error) {
+	account1, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+		ID:     accountId1,
+		Amount: amount1,
+	})
+
+	if err != nil {
+		// since we are using named return params we do not have to do the following explicit return
+		// return account1, account2, err
+		return
+	}
+
+	account2, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+		ID:     accountId2,
+		Amount: amount2,
+	})
+
+	return
 }
