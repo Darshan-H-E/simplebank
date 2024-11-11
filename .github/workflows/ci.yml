@@ -1,0 +1,25 @@
+name: ci-test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  test:
+    name: Go-Testz
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code into the go mod directory
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22.5'
+
+    - name: Test
+      run: make test
+
