@@ -97,8 +97,6 @@ func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (Tr
 			return err
 		}
 
-		// TODO: prevent deadlock and update accounts' balance
-		// get account
 		if arg.FromAccount < arg.ToAccount {
 			result.FromAccount, result.ToAccount, err = addMoney(ctx, q, arg.FromAccount, -arg.Amount, arg.ToAccount, arg.Amount)
 		} else {
